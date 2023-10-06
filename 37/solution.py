@@ -2,134 +2,56 @@ from typing import List
 
 class Solution:
     def solveSudoku(self, board: List[List[str]]) -> None:
-        g = Grid(board)
-        g.solve()
+        board = solve( board )
         print (board)
 
-class Grid:
-    
-    def __init__( self, grid ):
-        
-        self.grid = grid
-        self.rows =  [ Cells() for i in range(9) ]
-        self.cols =  [ Cells() for i in range(9) ]
-        self.boxes = [ Cells() for i in range(9) ]
-        
-        for i in range(len(grid)):
-            for j in range(len(grid[i])):
-                cell = Cell( grid[i][j] )
-                box = Grid.get_box( i, j )
-                self.rows[ i ].cells.append( cell )
-                self.cols[ j ].cells.append( cell )
-                self.boxes[ box ].cells.append( cell )
-    
-    @staticmethod
-    def get_box( i, j ):
-        return 3*(i//3) + (j//3)
-    
-    def load_options( self ):
-        for i in range( 9 ):
-            self.rows[ i ].load_options()
-            self.cols[ i ].load_options()
-            self.boxes[ i ].load_options()
+def solve( grid ):
 
-    def solve( self ):
+    """recursively solve the sudoku grid"""
 
-        self.load_options()
+    for i in range(9):
+        for j in range(9):
+            if grid[i][j] == '.':
+                for value in range(1,10):
+                    if is_valid( grid, i, j, str(value) ):
+                        grid[i][j] = str(value)
 
-        while True:
-            did_something = False
-    
-            self.print()
-            print ()
+                        #if there exists a solution where grid[i][j]=value, return the grid
+                        if solve( grid ):
+                            return grid
 
-            for i in range(9):
-                for j in range(9):
-                    cell = self.rows[i].cells[j]
-                    if len(cell.options) == 1:
-                        cell.assign_value( self, cell.options.pop(), i, j )
-                        did_something = True
+                        #else, backtrack and try the next value in the for loop
+                        else:
+                            grid[i][j] = '.'
 
-            if not did_something:
-                for group in [ self.rows, self.cols, self.boxes ]:
-                    for i in range( 9 ):
-                        
-                        options_counts = {}
-                        for cell in group[i].cells:
-                            for option in cell.options:
-                                if option not in options_counts:
-                                    options_counts[option] = 1
-                                else:
-                                    options_counts[option] += 1
+                return False
+    return True
 
-                        # check if any given option is only present in one cell
-                        for option in options_counts:
-                            if options_counts[option] == 1:
-                                did_something = True
-                                for cell in group[i].cells:
-                                    
-                                    # make option the ONLY option
-                                    if option in cell.options:
-                                        cell.options = { option }
-                                        print ('-----------')
-                                        print (cell.options)
-                                        print ('cell.options')
-                                        print (cell.options)
-                       
 
-            if not did_something:
-                return
-    
-    def print ( self ):
-        for i in range(9):
-            print ( ' '.join( str(cell.value) for cell in self.rows[i].cells ))
-    
-    def export( self ):
-        board = []
-        for i in range(9):
-            board.append( [ str(cell.value) for cell in self.rows[i].cells ] )
-        return board
-    
-class Cell:
-    def __init__( self, value ):
 
-        self.options = {}
-        self.value = value
-        if value == '.':
-            self.options = set(range(1, 10))
-        else:
-            self.value = int(self.value)                
+def is_valid( grid, row_ind, col_ind, value ) -> bool:
 
-    def remove_option( self, number ):
-        if number in self.options:
-            self.options.remove( number )
+    """
+    can i place the value in given grid at row and col?
+    """
 
-    def assign_value( self, grid, value, i, j ):
-        grid.grid[i][j] = str(value)
-        grid.rows[i].remove_options( self )
-        grid.cols[j].remove_options( self )
-        grid.boxes[Grid.get_box( i, j )].remove_options( self )
+    box_i_base = 3*(row_ind//3)
+    box_j_base = 3*(col_ind//3)
 
-class Cells:
-    def __init__( self ):
-        self.cells = []
-    
-    def remove_options( self, cell ):
-        for i in range( 9 ):
-            self.cells[i].remove_option( cell.value )
-        
-    def load_options( self ):
-        for i in range(9):
-            cell = self.cells[i]
-            if cell.value != '.':
-                self.remove_options( cell )
+    for k in range(9):
+        if grid[row_ind][k] == value:
+            return False
+        if grid[k][col_ind] == value:
+            return False
 
-    def get_set_options( self ):
-        options = {}
-        for cell in self.cells:
-            options.union( cell.options )
-        return options
-        
+        box_i = box_i_base + k//3
+        box_j = box_j_base + k%3
+        if grid[box_i][box_j] == value:
+            return False
+
+    return True
+
+
 board = [
     ["5","3",".",".","7",".",".",".","."],
     ["6",".",".","1","9","5",".",".","."],
@@ -141,7 +63,19 @@ board = [
     [".",".",".","4","1","9",".",".","5"],
     [".",".",".",".","8",".",".","7","9"]
 ]
-board = [[".",".","9","7","4","8",".",".","."],["7",".",".",".",".",".",".",".","."],[".","2",".","1",".","9",".",".","."],[".",".","7",".",".",".","2","4","."],[".","6","4",".","1",".","5","9","."],[".","9","8",".",".",".","3",".","."],[".",".",".","8",".","3",".","2","."],[".",".",".",".",".",".",".",".","6"],[".",".",".","2","7","5","9",".","."]]
+board = [
+    [".",".","9","7","4","8",".",".","."],
+    ["7",".",".",".",".",".",".",".","."],
+    [".","2",".","1",".","9",".",".","."],
+    [".",".","7",".",".",".","2","4","."],
+    [".","6","4",".","1",".","5","9","."],
+    [".","9","8",".",".",".","3",".","."],
+    [".",".",".","8",".","3",".","2","."],
+    [".",".",".",".",".",".",".",".","6"],
+    [".",".",".","2","7","5","9",".","."]
+]
+
+
 
 Solution().solveSudoku( board )
 
