@@ -7,4 +7,4 @@ result = Solution().mergeKLists(
         ListNode( 2, ListNode(6))
     ])
 
-print (result)
+result.print()
