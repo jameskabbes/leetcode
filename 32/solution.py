@@ -1,62 +1,70 @@
-
-
-
 class Solution:
-
-    def find_right_mate( self, s: str ):
-        
-        """
-        given '(())' return, the index of the ')' character that matches the first '('
-        """
-
-        counter = 0
-        for i in range( len(s) ):
-            if s[i] == '(':
-                counter -= 1
-            elif s[i] == ')':
-                counter += 1
-            
-            if counter == 0:
-                return i
-        
-        return None
-       
-
     def longestValidParentheses(self, s: str) -> int:
-
-        while s[0] != '(':
-            if len(s) == 1:
-                return 0
-            s = s[1:]
-        while s[-1] != ')':
-            if len(s) == 1:
-                return 0
-            s = s[:-1]
-
-        matches = [ None,  ] * len(s)
-
-        for i in range( len(s) ):
+        
+        valid = [ False, ] * len(s)
+        valid = self.get_length( s, valid )
+        
+        longest = 0
+        in_chain = False
+        print (valid)
+        for i in range( len(valid) ):
             
-            if matches[i] == None:
-                match_ind = self.find_right_mate( s[i:] )
-                matches[ i ] = match_ind
-
-                if match_ind != None:
-                    matches[ i ] += i
-                    matches[ matches[ i ] ] = i
-
-        high_score = 0
-        current_score = 0
-        for i in range(len(matches)):
-            
-            #reset
-            if matches[ i ] == None:
-                if current_score > high_score:
-                    high_score = current_score
-                current_score = 0
-            
+            if valid[i]:
+                if in_chain:
+                    current += 1                
+                else:
+                    in_chain = True
+                    current = 1
             else:
-                current_score += 1
-            
-        return max( current_score, high_score )
+                if in_chain:
+                    in_chain = False
+                    if current > longest:
+                        longest = current
+
+        if current > longest:
+            longest = current
+        
+        return longest        
+        
+    def get_length( self, s: str, valid ):
+
+        print ('Calling get length')
+        print (valid)
+
+        left = 0
+        changed = False
+        while left < len(s) -1:
+
+            print ('Left: ', left)
+
+            if valid[left]:
+                left += 1
+                continue
+
+            if s[left] == '(':
+
+                right = left+1
+                while right < len(s):
+
+                    print ('Right: ', right)
+
+                    if not valid[right]:
+                        if s[right] == ')':
+                            print ('------Valid!--------')
+                            changed = True
+                            valid[left] = True
+                            valid[right] = True
+                            left = right
+                        break                    
+                    
+                    # if these are valid parentheses, keep going                    
+                    if valid[right]:
+                        right += 1
+
+            left += 1
+
+        if changed:
+            return self.get_length( s, valid )
+        else:
+            return valid
 
