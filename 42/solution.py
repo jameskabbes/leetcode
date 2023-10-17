@@ -1,43 +1,31 @@
 from typing import List
 
 
-def is_left_peak( current, next ):
-    return current > next
-
-def is_right_peak( current, next ):
-    return current < next
-
-def get_volume( start_ind, end_ind ):
-    return end_ind-start_ind-1
-
-
 class Solution:
     def trap(self, height: List[int]) -> int:
+        n = len(height)
 
-        for i in range(len(height)-1):
-            
-            # only check from the leftmost peak
-            if is_left_peak( height[i], height[i+1] ):
-                return self.chunk( height[i:] )
+        max_left = [0,] * n
+        max_right = [0,] * n
 
-        return 0
-    
-    def chunk( self, height, volume=0):
+        # go from left to right, find the maximum height of a bar to the left of the current
+        for i in range(1, n):
+            max_left[i] = max(height[i-1], max_left[i-1])
 
-        if len(height) == 0:
-            return volume
+        # going from right to left, find the maximum height of a bar to the right of the current
+        for i in range(n-2, -1, -1):
+            max_right[i] = max(height[i+1], max_right[i+1])
 
-        h0 = height[0]
-        if (h0 - height[1]) > 1:
-            height[0] -= 1
-            return self.chunk( height, volume=volume )
-
-        return self.chunk( height[1:] )
-
+        ans = 0
+        # going through each bar, add the minimum of the maximum height of bars to the left and right minus the current height
+        for i in range(n):
+            water_level = min(max_left[i], max_right[i])
+            if water_level > height[i]:
+                ans += water_level - height[i]
+        return ans
 
 
-answer = Solution().trap( [2,0,1,2,0,2] )
-print ()
-print (answer)
-#print (Solution().trap( [0,1,0,2,1,0,1,3,2,1,2,1] ))
-
+answer = Solution().trap([4, 1, 2, 3, 4])
+print()
+print(answer)
+# print (Solution().trap( [0,1,0,2,1,0,1,3,2,1,2,1] ))
